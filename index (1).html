@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>⚽ Pro Value Bet + ACCA Tracker</title>
+    <style>
+        /* --- CSS Variables for Light/Dark Mode --- */
+        :root {
+            --bg: #f4f7f6;
+            --text: #1a1a1a;
+            --card: #ffffff;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+            --border: #e0e0e0;
+            --badge: #e9ecef;
+            --badge-text: #495057;
+            --input: #ffffff;
+            --green: #28a745;
+            --red: #dc3545;
+            --gold: #ffd700;
+            --blue: #2d8cff;
+        }
+        [data-theme="dark"] {
+            --bg: #121212;
+            --text: #e0e0e0;
+            --card: #1e1e1e;
+            --shadow: 0 4px 6px rgba(0,0,0,0.5);
+            --border: #333333;
+            --badge: #2d2d2d;
+            --badge-text: #b0b0b0;
+            --input: #2d2d2d;
+        }
+        * { box-sizing: border-box; margin: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 15px;
+            transition: 0.3s;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        h1 { font-size: 1.8em; margin: 0; }
+        .theme-toggle {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        /* --- API Key Box --- */
+        .key-box {
+            background: var(--card);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            border-left: 5px solid var(--gold);
+        }
+        .key-box input {
+            flex: 1;
+            min-width: 180px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--input);
+            color: var(--text);
+        }
+        .key-box button {
+            background: var(--blue);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .key-box .status-msg { font-size: 0.8em; opacity: 0.8; width: 100%; }
+        .saved-badge { background: var(--green); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.7em; }
+
+        /* --- ACCA Section --- */
+        .acca-box {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border-left: 5px solid var(--gold);
+        }
+        .acca-box h2 { font-size: 1.3em; margin-bottom: 10px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .acca-box .flex-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+        .btn-generate {
+            background: var(--gold);
+            color: #1a1a1a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+        .acca-picks {
+            margin: 15px 0;
+            padding: 10px;
+            background: var(--badge);
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        .acca-picks .pick { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid var(--border); }
+        .acca-total { font-size: 1.4em; font-weight: bold; }
+        .result-btns { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-win { background: var(--green); color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; }
+        .btn-lose { background: var(--red); color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; }
+        .btn-win:disabled, .btn-lose:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* --- Stats & Chart --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        .stat-card .num { font-size: 1.8em; font-weight: bold; }
+        .stat-card .label { font-size: 0.7em; opacity: 0.7; }
+        .chart-container {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        .chart-bars { display: flex; gap: 6px; align-items: flex-end; height: 120px; padding-top: 10px; }
+        .chart-bar-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; }
+        .bar {
+            width: 100%;
+            min-width: 20px;
+            max-width: 40px;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s;
+        }
+        .bar.win { background: var(--green); }
+        .bar.lose { background: var(--red); }
+        .bar-label { font-size: 0.6em; margin-top: 4px; opacity: 0.7; }
+
+        /* --- Match Cards Grid --- */
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .match-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            border-left: 5px solid var(--blue);
+        }
+        .match-card .teams { font-weight: bold; font-size: 1.1em; }
+        .match-card .league { font-size: 0.7em; opacity: 0.6; }
+        .match-card .stats { font-size: 0.7em; opacity: 0.7; background: var(--badge); padding: 4px 8px; border-radius: 4px; margin: 5px 0; }
+        .match-card .prediction { background: var(--badge); padding: 8px; border-radius: 6px; margin: 8px 0; font-size: 0.85em; }
+        .match-card .odds-row { display: flex; justify-content: space-around; font-size: 0.8em; flex-wrap: wrap; }
+        .value-badge { background: var(--gold); color: #1a1a1a; padding: 3px 10px; border-radius: 20px; font-weight: bold; font-size: 0.75em; }
+        .no-value { background: #e0e0e0; color: #666; padding: 3px 10px; border-radius: 20px; font-size: 0.75em; }
+        .text-center { text-align: center; }
+        .hidden { display: none; }
+        hr { border: 0; border-top: 1px solid var(--border); margin: 15px 0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <h1>⚽ Pro Bet Finder</h1>
+        <button class="theme-toggle" id="themeToggle">🌙 Dark</button>
+    </div>
+
+    <!-- API Key Input -->
+    <div id="apiKeyBox" class="key-box">
+        <label>🔑 API Key:</label>
+        <input type="password" id="apiInput" placeholder="Paste your Bzzoiro key...">
+        <button id="saveKeyBtn">Save</button>
+        <div id="keyStatus" class="status-msg">Get free key at <a href="https://sports.bzzoiro.com" target="_blank">sports.bzzoiro.com</a></div>
+    </div>
+
+    <!-- ACCA Builder -->
+    <div class="acca-box">
+        <h2>📈 Daily ACCA (5-15 Odds)</h2>
+        <div id="accaStatus" style="font-size:0.9em; opacity:0.8;">Generate an accumulator from today's best value bets.</div>
+        <div id="accaPicksContainer" class="acca-picks hidden"></div>
+        <div class="flex-row">
+            <button class="btn-generate" id="generateAccaBtn">🚀 Generate ACCA</button>
+            <span id="accaTotalDisplay" class="acca-total"></span>
+        </div>
+        <div id="accaResultBtns" class="result-btns hidden">
+            <button class="btn-win" id="accaWinBtn">✅ Won (Record Win)</button>
+            <button class="btn-lose" id="accaLoseBtn">❌ Lost (Record Loss)</button>
+        </div>
+    </div>
+
+    <!-- Stats & Chart -->
+    <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="num" id="totalBets">0</div><div class="label">Total ACCAs</div></div>
+        <div class="stat-card"><div class="num" id="winsCount">0</div><div class="label">Wins</div></div>
+        <div class="stat-card"><div class="num" id="lossesCount">0</div><div class="label">Losses</div></div>
+        <div class="stat-card"><div class="num" id="winRate">0%</div><div class="label">Win Rate</div></div>
+        <div class="stat-card"><div class="num" id="profitLoss">+0.0</div><div class="label">Profit (Units)</div></div>
+    </div>
+    <div class="chart-container">
+        <div style="font-weight:bold; font-size:0.9em;">📊 Performance History (Last 10)</div>
+        <div id="chartBars" class="chart-bars"><p style="opacity:0.5;">No data yet. Place an ACCA and record the result!</p></div>
+    </div>
+
+    <!-- Refresh & Match List -->
+    <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; margin:15px 0;">
+        <button class="btn-generate" id="refreshBtn" style="background:var(--blue); color:white;">🔄 Refresh Matches</button>
+        <span id="statusText" style="opacity:0.7;">Ready</span>
+    </div>
+    <div id="matchesContainer" class="matches-grid">
+        <p class="text-center" style="grid-column:1/-1;">Load matches to see value bets.</p>
+    </div>
+</div>
+
+<script>
+    // --- DOM Refs ---
+    const $ = id => document.getElementById(id);
+    const matchesContainer = $('matchesContainer');
+    const refreshBtn = $('refreshBtn');
+    const statusText = $('statusText');
+    const themeToggle = $('themeToggle');
+    const apiInput = $('apiInput');
+    const saveKeyBtn = $('saveKeyBtn');
+    const keyStatus = $('keyStatus');
+    const generateAccaBtn = $('generateAccaBtn');
+    const accaPicksContainer = $('accaPicksContainer');
+    const accaTotalDisplay = $('accaTotalDisplay');
+    const accaStatus = $('accaStatus');
+    const accaResultBtns = $('accaResultBtns');
+    const accaWinBtn = $('accaWinBtn');
+    const accaLoseBtn = $('accaLoseBtn');
+
+    // --- Theme ---
+    function toggleTheme() {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-theme', next);
+        themeToggle.textContent = next === 'light' ? '🌙 Dark' : '☀️ Light';
+        localStorage.setItem('theme', next);
+    }
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeToggle.textContent = savedTheme === 'light' ? '🌙 Dark' : '☀️ Light';
+    themeToggle.addEventListener('click', toggleTheme);
+
+    // --- API Key ---
+    function getApiKey() { return localStorage.getItem('bzzoiro_api_key'); }
+    function saveApiKey(key) {
+        if (key && key.length > 10) {
+            localStorage.setItem('bzzoiro_api_key', key);
+            apiInput.value = '';
+            keyStatus.innerHTML = '✅ Saved! <span class="saved-badge">ACTIVE</span>';
+            document.getElementById('apiKeyBox').style.borderLeftColor = '#28a745';
+            return true;
+        } else { keyStatus.innerHTML = '❌ Invalid key.'; return false; }
+    }
+    saveKeyBtn.addEventListener('click', () => { if(saveApiKey(apiInput.value.trim())) fetchAndDisplayMatches(); });
+    apiInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') saveKeyBtn.click(); });
+
+    // --- Poisson ---
+    function poisson(k, lambda) {
+        if (lambda <= 0) return k === 0 ? 1.0 : 0.0;
+        let e = Math.exp(-lambda), fact = 1;
+        for (let i=2; i<=k; i++) fact *= i;
+        return (Math.pow(lambda, k) * e) / fact;
+    }
+
+    // --- Fetch Standings ---
+    async function fetchStandings(leagueId, apiKey) {
+        try {
+            const res = await fetch(`https://sports.bzzoiro.com/api/v2/leagues/${leagueId}/standings/`, { headers: { 'Authorization': `Token ${apiKey}` } });
+            if (!res.ok) return null;
+            return await res.json();
+        } catch { return null; }
+    }
+
+    function extractTeamStats(data) {
+        let standings = data?.standings || data?.data || [];
+        if (!Array.isArray(standings) && data?.results) standings = data.results;
+        if (Array.isArray(standings) && standings.length > 0 && standings[0].standings) standings = standings[0].standings;
+        if (!Array.isArray(standings) || standings.length === 0) return null;
+        const statsMap = {};
+        let totalGF=0, totalGA=0, count=0;
+        standings.forEach(item => {
+            const team = item.team || item;
+            const tid = team.id;
+            const stats = item.statistics || item.stats || {};
+            const gf = parseFloat(stats.goals_scored || stats.gf || stats.GF || 0);
+            const ga = parseFloat(stats.goals_conceded || stats.ga || stats.GA || 0);
+            if (tid && gf>0 && ga>0) { statsMap[tid] = {gf, ga}; totalGF+=gf; totalGA+=ga; count++; }
+        });
+        if (count === 0) return null;
+        return { teams: statsMap, leagueAvgGF: totalGF/count, leagueAvgGA: totalGA/count };
+    }
+
+    // --- Prediction Engine ---
+    function calculateMatchProbs(homeId, awayId, statsMap, avgGF, avgGA) {
+        const h = statsMap[homeId] || { gf: avgGF, ga: avgGA };
+        const a = statsMap[awayId] || { gf: avgGF, ga: avgGA };
+        const hAtt = h.gf / avgGF, hDef = h.ga / avgGA;
+        const aAtt = a.gf / avgGF, aDef = a.ga / avgGA;
+        const homeExp = hAtt * aDef * avgGF;
+        const awayExp = aAtt * hDef * avgGF;
+        let hWin=0, draw=0, aWin=0, o25=0, btts=0;
+        for (let i=0; i<=7; i++) {
+            for (let j=0; j<=7; j++) {
+                const p = poisson(i, homeExp) * poisson(j, awayExp);
+                if (i>j) hWin += p; else if (i===j) draw += p; else aWin += p;
+                if (i+j > 2.5) o25 += p;
+                if (i>0 && j>0) btts += p;
+            }
+        }
+        return { homeExp, awayExp, hWin, draw, aWin, o25, btts, hAtt, hDef, aAtt, aDef };
+    }
+
+    function findValueBet(match, statsMap, avgGF, avgGA) {
+        const probs = calculateMatchProbs(match.home_team.id, match.away_team.id, statsMap, avgGF, avgGA);
+        let o1x2={home:0, draw:0, away:0}, o25=0, obtts=0;
+        if (match.odds) match.odds.forEach(odd => {
+            if (odd.market === '1x2') { if(odd.outcome==='HOME') o1x2.home=Math.max(o1x2.home, odd.decimal_odds); if(odd.outcome==='DRAW') o1x2.draw=Math.max(o1x2.draw, odd.decimal_odds); if(odd.outcome==='AWAY') o1x2.away=Math.max(o1x2.away, odd.decimal_odds); }
+            if (odd.market === 'over_under_25' && odd.outcome==='over') o25 = Math.max(o25, odd.decimal_odds);
+            if (odd.market === 'btts' && odd.outcome==='yes') obtts = Math.max(obtts, odd.decimal_odds);
+        });
+        const vH = o1x2.home>0 ? (probs.hWin * o1x2.home) - 1 : -999;
+        const vD = o1x2.draw>0 ? (probs.draw * o1x2.draw) - 1 : -999;
+        const vA = o1x2.away>0 ? (probs.aWin * o1x2.away) - 1 : -999;
+        const vO = o25>0 ? (probs.o25 * o25) - 1 : -999;
+        const vB = obtts>0 ? (probs.btts * obtts) - 1 : -999;
+        const vals = [vH, vD, vA, vO, vB];
+        const best = Math.max(...vals);
+        const markets = ['1X2 (Home)', '1X2 (Draw)', '1X2 (Away)', 'Over 2.5', 'BTTS'];
+        const oddsMap = [o1x2.home, o1x2.draw, o1x2.away, o25, obtts];
+        const idx = vals.indexOf(best);
+        return { bestValue: best, bestMarket: markets[idx] || 'None', bestOdds: oddsMap[idx] || 0, ...probs, odds: {o1x2, o25, obtts}, values: {vH, vD, vA, vO, vB} };
+    }
+
+    // --- Main Fetch ---
+    let currentMatches = [];
+
+    async function fetchAndDisplayMatches() {
+        const apiKey = getApiKey();
+        if (!apiKey) { statusText.textContent = '⛔ No key.'; return; }
+        refreshBtn.disabled = true; statusText.textContent = '⏳ Loading...';
+        matchesContainer.innerHTML = '<p class="text-center">Loading...</p>';
+
+        try {
+            const eventsRes = await fetch(`https://sports.bzzoiro.com/api/v2/events/?limit=20&status=NS`, { headers: { 'Authorization': `Token ${apiKey}` } });
+            if (!eventsRes.ok) throw new Error(`HTTP ${eventsRes.status}`);
+            const eventsData = await eventsRes.json();
+            let events = eventsData.results || [];
+            if (events.length === 0) { matchesContainer.innerHTML = '<p class="text-center">No matches.</p>'; statusText.textContent = '⚠️ No matches.'; refreshBtn.disabled=false; return; }
+
+            statusText.textContent = '📊 Fetching odds...';
+            const matchPromises = events.map(async (e) => {
+                const oddsRes = await fetch(`https://sports.bzzoiro.com/api/v2/events/${e.id}/odds/`, { headers: { 'Authorization': `Token ${apiKey}` } });
+                const oddsData = oddsRes.ok ? await oddsRes.json() : {};
+                e.odds = oddsData.results || [];
+                return e;
+            });
+            let matches = await Promise.all(matchPromises);
+
+            statusText.textContent = '📈 Fetching standings...';
+            const leagueIds = [...new Set(matches.map(m => m.league.id))];
+            const standingData = await Promise.all(leagueIds.map(id => fetchStandings(id, apiKey)));
+            let statsMap = {}; let avgGF=1.35, avgGA=1.35;
+            standingData.forEach((data) => {
+                const ext = extractTeamStats(data);
+                if (ext) { Object.assign(statsMap, ext.teams); avgGF = ext.leagueAvgGF; avgGA = ext.leagueAvgGA; }
+            });
+
+            statusText.textContent = '🧮 Calculating value...';
+            currentMatches = matches.map(m => ({ ...m, ...findValueBet(m, statsMap, avgGF, avgGA) }));
+            currentMatches.sort((a,b) => b.bestValue - a.bestValue);
+            renderMatches(currentMatches);
+            statusText.textContent = `✅ ${currentMatches.length} matches loaded.`;
+        } catch(e) {
+            matchesContainer.innerHTML = `<p class="text-center" style="color:red;">Error: ${e.message}</p>`;
+            statusText.textContent = '❌ Error.';
+        }
+        refreshBtn.disabled = false;
+    }
+
+    function renderMatches(matches) {
+        if (!matches || matches.length === 0) { matchesContainer.innerHTML = '<p class="text-center">No matches.</p>'; return; }
+        let html = '';
+        matches.forEach(m => {
+            const edge = (m.bestValue * 100).toFixed(1);
+            const isValue = m.bestValue > 0.05;
+            const badge = isValue ? `<span class="value-badge">🔥 VALUE +${edge}%</span>` : `<span class="no-value">No edge</span>`;
+            html += `
+                <div class="match-card">
+                    <div class="teams">${m.home_team?.name} vs ${m.away_team?.name}</div>
+                    <div class="league">${m.league?.name} | xG: ${m.homeExp.toFixed(2)}-${m.awayExp.toFixed(2)}</div>
+                    <div class="stats">Att: ${m.hAtt.toFixed(2)}/${m.aAtt.toFixed(2)} Def: ${m.hDef.toFixed(2)}/${m.aDef.toFixed(2)}</div>
+                    <div class="prediction">🏆 Best: ${m.bestMarket} (${(m.bestValue*100).toFixed(1)}% edge) | Odds: ${m.bestOdds.toFixed(2)}</div>
+                    <div class="odds-row">
+                        <span>1: ${m.odds.o1x2.home.toFixed(2)||'-'}</span>
+                        <span>X: ${m.odds.o1x2.draw.toFixed(2)||'-'}</span>
+                        <span>2: ${m.odds.o1x2.away.toFixed(2)||'-'}</span>
+                        <span>O2.5: ${m.odds.o25.toFixed(2)||'-'}</span>
+                        <span>BTTS: ${m.odds.obtts.toFixed(2)||'-'}</span>
+                    </div>
+                    ${badge}
+                </div>
+            `;
+        });
+        matchesContainer.innerHTML = html;
+    }
+
+    // --- ACCA Generator ---
+    function generateAcca() {
+        if (!currentMatches || currentMatches.length === 0) { accaStatus.textContent = '⚠️ Load matches first!'; return; }
+        accaStatus.textContent = '🔍 Building ACCA...';
+        generateAccaBtn.disabled = true;
+
+        // Filter for value bets (edge > 2%)
+        let candidates = currentMatches.filter(m => m.bestValue > 0.02 && m.bestOdds > 1.1);
+        // Sort by best value descending
+        candidates.sort((a,b) => b.bestValue - a.bestValue);
+
+        let picks = [];
+        let totalOdds = 1.0;
+        let usedTeams = new Set();
+
+        for (let match of candidates) {
+            // Avoid same teams in ACCA (optional, reduces correlation)
+            const homeId = match.home_team.id;
+            const awayId = match.away_team.id;
+            if (usedTeams.has(homeId) || usedTeams.has(awayId)) continue;
+            
+            // Use the best market for this match
+            const pickOdd = match.bestOdds;
+            if (pickOdd < 1.1) continue;
+            
+            // Simulate adding it
+            if (totalOdds * pickOdd <= 15.0) {
+                picks.push({
+                    match: `${match.home_team.name} vs ${match.away_team.name}`,
+                    market: match.bestMarket,
+                    odds: pickOdd,
+                    edge: match.bestValue
+                });
+                totalOdds *= pickOdd;
+                usedTeams.add(homeId);
+                usedTeams.add(awayId);
+            }
+            if (totalOdds >= 5.0) break;
+        }
+
+        if (picks.length < 2 || totalOdds < 5.0) {
+            accaStatus.textContent = `⚠️ Couldn't reach 5.0 odds with ${picks.length} picks (${totalOdds.toFixed(2)}). Try different matches.`;
+            generateAccaBtn.disabled = false;
+            accaPicksContainer.classList.add('hidden');
+            accaTotalDisplay.textContent = '';
+            accaResultBtns.classList.add('hidden');
+            return;
+        }
+
+        // Display ACCA
+        accaPicksContainer.classList.remove('hidden');
+        let html = '<div style="font-weight:bold;">📋 Your Picks:</div>';
+        picks.forEach((p, i) => {
+            html += `<div class="pick"><span>${i+1}. ${p.match} (${p.market})</span><span>${p.odds.toFixed(2)}</span></div>`;
+        });
+        html += `<div class="pick" style="font-weight:bold; border-top:2px solid var(--gold);"><span>Total Odds</span><span>${totalOdds.toFixed(2)}</span></div>`;
+        accaPicksContainer.innerHTML = html;
+        accaTotalDisplay.textContent = `⚡ ${totalOdds.toFixed(2)}x`;
+        accaStatus.textContent = `✅ ACCA built! ${picks.length} picks. Record the result below.`;
+        accaResultBtns.classList.remove('hidden');
+        
+        // Store current ACCA in memory for tracking
+        window._currentAcca = { picks, totalOdds, date: new Date().toISOString().split('T')[0] };
+        generateAccaBtn.disabled = false;
+    }
+
+    // --- History / Tracker Logic ---
+    function getHistory() {
+        try { return JSON.parse(localStorage.getItem('bet_history')) || []; } catch { return []; }
+    }
+    function saveHistory(history) { localStorage.setItem('bet_history', JSON.stringify(history)); }
+
+    function recordAccaResult(status) {
+        if (!window._currentAcca) { alert('Generate an ACCA first!'); return; }
+        const acca = window._currentAcca;
+        const history = getHistory();
+        const entry = {
+            id: Date.now(),
+            date: acca.date,
+            odds: acca.totalOdds,
+            picks: acca.picks.length,
+            status: status, // 'won' or 'lost'
+            profit: status === 'won' ? acca.totalOdds - 1 : -1
+        };
+        history.push(entry);
+        saveHistory(history);
+        window._currentAcca = null;
+        accaResultBtns.classList.add('hidden');
+        accaStatus.textContent = `📝 Recorded as ${status.toUpperCase()}!`;
+        updateStatsAndChart();
+    }
+
+    accaWinBtn.addEventListener('click', () => recordAccaResult('won'));
+    accaLoseBtn.addEventListener('click', () => recordAccaResult('lost'));
+    generateAccaBtn.addEventListener('click', generateAcca);
+
+    // --- Stats & Chart Renderer ---
+    function updateStatsAndChart() {
+        const history = getHistory();
+        const total = history.length;
+        const wins = history.filter(h => h.status === 'won').length;
+        const losses = total - wins;
+        const rate = total > 0 ? (wins / total * 100) : 0;
+        const totalProfit = history.reduce((sum, h) => sum + h.profit, 0);
+        $('totalBets').textContent = total;
+        $('winsCount').textContent = wins;
+        $('lossesCount').textContent = losses;
+        $('winRate').textContent = rate.toFixed(0) + '%';
+        $('profitLoss').textContent = (totalProfit > 0 ? '+' : '') + totalProfit.toFixed(1);
+        $('profitLoss').style.color = totalProfit >= 0 ? 'var(--green)' : 'var(--red)';
+
+        // Chart - Last 10
+        const chartContainer = $('chartBars');
+        const last10 = history.slice(-10);
+        if (last10.length === 0) {
+            chartContainer.innerHTML = '<p style="opacity:0.5;">No data yet.</p>';
+            return;
+        }
+        let barsHtml = '';
+        last10.forEach(h => {
+            const cls = h.status === 'won' ? 'win' : 'lose';
+            const height = Math.max(20, Math.min(100, 20 + h.profit * 10));
+            barsHtml += `
+                <div class="chart-bar-wrap">
+                    <div class="bar ${cls}" style="height:${height}px;"></div>
+                    <div class="bar-label">${h.profit > 0 ? '+' : ''}${h.profit.toFixed(1)}</div>
+                </div>
+            `;
+        });
+        chartContainer.innerHTML = `<div style="display:flex; gap:6px; align-items:flex-end; height:120px; width:100%;">${barsHtml}</div>`;
+    }
+
+    // --- Refresh Button ---
+    refreshBtn.addEventListener('click', () => {
+        fetchAndDisplayMatches();
+        // Clear ACCA UI if matches change
+        accaPicksContainer.classList.add('hidden');
+        accaTotalDisplay.textContent = '';
+        accaResultBtns.classList.add('hidden');
+        window._currentAcca = null;
+    });
+
+    // --- Init ---
+    window.addEventListener('load', () => {
+        if (getApiKey()) {
+            document.getElementById('apiKeyBox').style.borderLeftColor = '#28a745';
+            keyStatus.innerHTML = '✅ Key set. <span class="saved-badge">ACTIVE</span>';
+            fetchAndDisplayMatches();
+        } else {
+            matchesContainer.innerHTML = '<p class="text-center">🔑 Enter your API key above.</p>';
+        }
+        updateStatsAndChart();
+        // Auto-refresh stats every 30s (just in case)
+        setInterval(updateStatsAndChart, 30000);
+    });
+</script>
+</body>
+</html>
